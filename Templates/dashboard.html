@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edf2f7;
+            color: #334e68;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #102a43;
+            font-weight: 700;
+        }
+        h2 {
+            font-size: 22px;
+            color: #102a43;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cbd5e0;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #f7fafc;
+            margin-bottom: 10px;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3182ce;
+            box-shadow: 0px 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0px 6px 12px rgba(0,0,0,0.1);
+        }
+        .trip-detail, .button, .logout-button, a {
+            margin-bottom: 5px;
+            font-size: 16px;
+            color: #334e68;
+        }
+        .trip-detail strong, .button, .logout-button, a {
+            color: #3182ce;
+        }
+        .button, .logout-button, a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #3182ce;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover, .logout-button:hover, a:hover {
+            background-color: #2c5282;
+        }
+        .logout-button {
+            background-color: #e53e3e;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .logout-button:hover {
+            background-color: #c53030;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 7px;
+            background-color: #edf2f7;
+            color: #5a67d8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status.accepted {
+            background-color: #c6f6d5;
+            color: #38a169;
+        }
+        .status.pending {
+            background-color: #feebc8;
+            color: #dd6b20;
+        }
+        .status.declined {
+            background-color: #fed7d7;
+            color: #e53e3e;
+        }
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                margin: 20px auto;
+                box-shadow: none;
+            }
+            h1 {
+                text-align: center;
+                color: #102a43;
+                font-weight: 700;
+                font-size: 2.5em; /* Size of the header */
+                margin-bottom: 1em; /* Spacing after the header */
+                text-shadow: 3px 3px 0px #b3b3b3, /* Shadow effect for the 3D look */
+                             6px 6px 0px rgba(0, 0, 0, 0.2); /* Darker shadow for depth */
+                transition: text-shadow 0.3s ease;
+            }
+            h1:hover {
+                text-shadow: 6px 6px 0px #b3b3b3,
+                             9px 9px 0px rgba(0, 0, 0, 0.2);
+            }
+    
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .container {
+                    width: 90%;
+                    margin: 20px auto;
+                    box-shadow: none;
+                }
+                h1 {
+                    font-size: 2em; /* Slightly smaller size for mobile */
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <div class="section">
+            <h2>Trips You've Created</h2>
+            {% if created_trips %}
+                {% for trip in created_trips %}
+                    <div class="trip-details card">
+                        <div class="trip-detail"><strong>Date:</strong> {{ trip.time.strftime('%Y-%m-%d') }}</div>
+                        <div class="trip-detail"><strong>Name:</strong> {{ trip.name }}</div>
+                        <div class="trip-detail"><strong>Creator Email:</strong> {{ trip.creator_email }}</div>
+                        <div class="trip-detail"><strong>Time:</strong> {{ trip.time.strftime('%H:%M') }}</div>
+                        <div class="trip-detail"><strong>Destination:</strong> {{ trip.destination }}</div>
+                        <div class="trip-detail"><strong>Participants:</strong>
+                            {% if trip.join_requests %}
+                                {% for join_request in trip.join_requests if join_request.accepted %}
+                                    {{ join_request.requester_email }};
+                                {% endfor %}
+                            {% else %}
+                                No participants yet.
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>You haven't created any trips yet.</p>
+            {% endif %}
+        </div>
+        </div>
+        <div class="section">
+            <h2>Requests Received to Join Your Trips</h2>
+            {% if received_requests %}
+            <ul>
+                {% for join_request in received_requests %}
+                    <li class="card">
+                        Trip to {{ join_request.cab_request.destination }} at {{ join_request.cab_request.time.strftime('%Y-%m-%d %H:%M') }}<br>
+                        Requested by: {{ join_request.requester_email }}
+                        <div>
+                            <form action="{{ url_for('handle_join_request', join_request_id=join_request.id, action='accept') }}" method="post">
+                                <button type="submit" name="response" value="accept">Accept</button>
+                            </form>
+                            <form action="{{ url_for('handle_join_request', join_request_id=join_request.id, action='decline') }}" method="post">
+                                <button type="submit" name="response" value="decline">Decline</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-requests">No received requests.</p>
+        {% endif %}
+
+        </div>
+        <div class="section">
+            <h2>Requests You've Sent to Join Trips</h2>
+            {% if sent_requests %}
+            <ul>
+                {% for request in sent_requests %}
+                    <li class="card">
+                        Request to join trip to {{ request.cab_request.destination }} on {{ request.cab_request.time.strftime('%Y-%m-%d %H:%M') }}<br>
+                        Status: {% if request.accepted %} Accepted {% else %} Pending {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-requests">You haven't sent any requests to join trips.</p>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        </div>
+    </div>
+</body>
+</html>
