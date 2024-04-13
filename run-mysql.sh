@@ -8,4 +8,4 @@ docker run -d \
   -e MYSQL_USER=kabbit \
   -e MYSQL_PASSWORD=kabbit \
   -v /docker/mysql-data/:/var/lib/mysql \
-  mysql:latest
+  mariadb:latest
