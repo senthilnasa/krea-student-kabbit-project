@@ -6,8 +6,8 @@ docker run -d \
     -p 5000:5000 \
     --name my-flask-app \
     -e FLASK_APP=app.py \
-    -e FLASK_ENV=development \
+    -e FLASK_ENV=production \
     -e FLASK_DEBUG=1 \
-    -e DATABASE_URL=mysql+pymysql://kabbit:kabbit@host.docker.internal:3306/kabbit_db \
+    -e DATABASE_URL=mysql+pymysql://kabbit:kabbit@10.10.3.120:3306/kabbit_db \
     -v $(pwd):/app \
     my-flask-app
