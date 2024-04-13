@@ -7,5 +7,5 @@ docker run -d \
   -e MYSQL_DATABASE=kabbit_db \
   -e MYSQL_USER=kabbit \
   -e MYSQL_PASSWORD=kabbit \
-  -v mysql-data:/var/lib/mysql \
+  -v /docker/mysql-data/:/var/lib/mysql \
   mysql:latest
