@@ -1,73 +1,12 @@
-# Import necessary modules and libraries
-from flask import Flask, render_template, request, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
-from flask_mail import Mail, Message
+from app import app, db, mail
+from flask import render_template, request, redirect, url_for, session, flash
+from models import TemporaryLogin, VerificationToken, User, CabRequest, JoinRequest
+from flask_mail import Message
 import secrets
-from uuid import uuid4  # Import uuid4 to generate unique IDs
-from flask import flash  # Add this to your imports at the beginning of your Flask app
-from flask_migrate import Migrate
+from datetime import datetime, timedelta
+from uuid import uuid4
 
 
-# Initialize the Flask app
-app = Flask(__name__)
-app.secret_key = '333'
-
-# Configure the database URI and other settings
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cab_sharing.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'kabbitkrea@gmail.com'
-app.config['MAIL_PASSWORD'] = 'rktk onpd yjuy ccxj'
-
-# Initialize the SQLAlchemy database and the Mail extension
-db = SQLAlchemy(app)
-mail = Mail(app)
-
-# After initializing your Flask app and SQLAlchemy db
-migrate = Migrate(app, db)
-
-
-# Define the database models
-class TemporaryLogin(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-
-class VerificationToken(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    token = db.Column(db.String(100), nullable=False)
-
-class CabRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-    destination = db.Column(db.String(100), nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
-    verified = db.Column(db.Boolean, default=False)
-    creator_email = db.Column(db.String(120), nullable=False)
-
-participants = db.Table('participants',
-    db.Column('cab_request_id', db.Integer, db.ForeignKey('cab_request.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
-)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    
-class JoinRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cab_request_id = db.Column(db.Integer, db.ForeignKey('cab_request.id'), nullable=False)
-    requester_email = db.Column(db.String(120), nullable=False)
-    accepted = db.Column(db.Boolean, default=False)  # Add this line
-    cab_request = db.relationship('CabRequest', backref=db.backref('join_requests', lazy=True))
 
 @app.route('/')
 def index():
@@ -84,7 +23,11 @@ def login():
         session['user_email'] = email
         session['user_phone'] = phone_number
         
-        temp_login = TemporaryLogin(name=name, email=email, phone_number=phone_number)
+        temp_login = TemporaryLogin()
+        temp_login.name = name
+        temp_login.email = email
+        temp_login.phone_number = phone_number
+        
         db.session.add(temp_login)
         db.session.commit()
         
@@ -95,7 +38,9 @@ def login():
         if verification_token:
             verification_token.token = token
         else:
-            verification_token = VerificationToken(email=email, token=token)
+            verification_token = VerificationToken()
+            verification_token.email = email
+            verification_token.token = token
             db.session.add(verification_token)
         
         db.session.commit()
@@ -115,20 +60,10 @@ def verify_email(token):
     if verification_record:
         temp_login = TemporaryLogin.query.filter_by(email=verification_record.email).first()
         if temp_login:
-            new_user = User.query.filter_by(email=temp_login.email).first()
-            if not new_user:
-                new_user = User(name=temp_login.name, email=temp_login.email)
-                db.session.add(new_user)
-            
-            cab_requests = CabRequest.query.filter_by(email=verification_record.email, verified=False).all()
-            for request in cab_requests:
-                request.verified = True
-            
-            db.session.commit()
-
-            session['logged_in'] = True
-            session['user_name'] = temp_login.name
-            session['user_email'] = temp_login.email
+            new_user = User()
+            new_user.name = temp_login.name
+            new_user.email = temp_login.email
+            db.session.add(new_user)
 
             return redirect(url_for('home_page'))
 
@@ -158,7 +93,13 @@ def cab_request():
         # Check if the user is the creator of the trip
         if email != creator_email:
             # Create a new trip
-            new_request = CabRequest(name=name, email=email, phone_number=phone_number, destination=destination, time=datetime_combined, creator_email=creator_email)
+            new_request = CabRequest()
+            new_request.name = name
+            new_request.email = email
+            new_request.phone_number = phone_number
+            new_request.destination = destination
+            new_request.time = datetime_combined
+            new_request.creator_email = creator_email
             db.session.add(new_request)
             db.session.commit()
             return redirect(url_for('filter_requests', date=date, time_slot=time))
@@ -176,7 +117,13 @@ def cab_request():
                 return render_template('options.html', existing_trip=existing_trip)
 
         # Create a new trip
-        new_request = CabRequest(name=name, email=email, phone_number=phone_number, destination=destination, time=datetime_combined, creator_email=creator_email)
+        new_request = CabRequest()
+        new_request.name = name
+        new_request.email = email
+        new_request.phone_number = phone_number
+        new_request.destination = destination
+        new_request.time = datetime_combined
+        new_request.creator_email = creator_email
         db.session.add(new_request)
         db.session.commit()
         return redirect(url_for('filter_requests', date=date, time_slot=time))
@@ -273,7 +220,9 @@ def join_trip(cab_request_id):
     existing_request = JoinRequest.query.filter_by(cab_request_id=cab_request_id, requester_email=user_email).first()
     
     if not existing_request:
-        join_request = JoinRequest(cab_request_id=cab_request_id, requester_email=user_email)
+        join_request = JoinRequest()
+        join_request.cab_request_id = cab_request_id
+        join_request.requester_email = user_email
         db.session.add(join_request)
         db.session.commit()
     

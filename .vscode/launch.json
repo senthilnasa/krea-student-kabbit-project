@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1",
+                "FLASK_SECRET_KEY":"333",
+                "MAIL_USERNAME":"kabbitkrea@gmail.com",
+                "MAIL_PASSWORD":"rktkonpdyjuyccxj",
+                "DATABASE_URL":"mysql+pymysql://kabbit:kabbit@localhost:3306/kabbit_db",
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true
+        }
+    ]
+}
