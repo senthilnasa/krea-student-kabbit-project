@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:latest
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./data.sql:/docker-entrypoint-initdb.d/data.sql  # Ensure this points directly to the file
+    environment:
+      MYSQL_ROOT_PASSWORD: kabbit  # Replace 'yourpassword' with your actual password
+      MYSQL_DATABASE: kabbit_db
+      MYSQL_USER: kabbit
+      MYSQL_PASSWORD: kabbit
+    ports:
+      - "3306:3306"
+
+  web:
+    build: .
+    environment:
+      FLASK_APP: app.py
+      FLASK_ENV: development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+volumes:
+  db-data:
