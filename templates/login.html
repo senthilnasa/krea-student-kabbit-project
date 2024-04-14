@@ -95,13 +95,19 @@
             google.accounts.id.prompt();
         }
         function onSignIn(response) {
-            var profile = response.getBasicProfile();
-            console.log('ID: ' + profile.getId());
-            console.log('Full Name: ' + profile.getName());
-            console.log('Given Name: ' + profile.getGivenName());
-            console.log('Family Name: ' + profile.getFamilyName());
-            console.log('Image URL: ' + profile.getImageUrl());
-            console.log('Email: ' + profile.getEmail());
+            console.log("Is Login True");
+            const jwt = authInfos.credential;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'auth.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                var jsonResponse = JSON.parse(this.responseText);
+                if (jsonResponse["ok"]) {
+                    window.location.reload();
+                }
+            };
+            xhr.send('token=' + jwt);
+           
         }
 
     </script>        

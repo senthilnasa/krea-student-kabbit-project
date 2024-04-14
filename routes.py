@@ -5,6 +5,7 @@ from flask_mail import Message
 import secrets
 from datetime import datetime, timedelta
 from uuid import uuid4
+import requests
 
 
 
@@ -15,45 +16,25 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        phone_number = request.form['phone']
+        # Google Login with token 
+        token = request.form.get('token')
+        # Verify ID token and get mail Id
+        mail_id = verify_id_token(token)
+        print(mail_id)
+        return redirect(mail_id)
         
-        session['user_name'] = name
-        session['user_email'] = email
-        session['user_phone'] = phone_number
-        
-        temp_login = TemporaryLogin()
-        temp_login.name = name
-        temp_login.email = email
-        temp_login.phone_number = phone_number
-        
-        db.session.add(temp_login)
-        db.session.commit()
-        
-        token = secrets.token_urlsafe()
-        
-        # Check if a token already exists for the given email and update it
-        verification_token = VerificationToken.query.filter_by(email=email).first()
-        if verification_token:
-            verification_token.token = token
-        else:
-            verification_token = VerificationToken()
-            verification_token.email = email
-            verification_token.token = token
-            db.session.add(verification_token)
-        
-        db.session.commit()
 
-        verification_url = url_for('verify_email', token=token, _external=True)
-        msg = Message("Email Verification", sender=app.config['MAIL_USERNAME'], recipients=[email])
-        msg.body = f'Please click on the link to verify your email: {verification_url}'
-        mail.send(msg)
-
-        return render_template('verify_email_prompt.html')
-    
     return render_template('login.html')
 
+
+def verify_id_token(token):
+    # Verify the token and get the email ID
+    url=f"https://www.googleapis.com/oauth2/v1/tokeninfo?id_token={token}"
+    response = requests.get(url)
+    data = response.json()
+    return data.get('email')
+
+    
 @app.route('/verify_email/<token>')
 def verify_email(token):
     verification_record = VerificationToken.query.filter_by(token=token).first()
