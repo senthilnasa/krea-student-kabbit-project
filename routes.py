@@ -40,9 +40,10 @@ def login():
                 session['logged_in'] = True
                 session['user_name'] = user.name
                 session['user_email'] = user.email
-        return {"ok": True}
+        else:
+            return {"ok": False,"message":"Unable to login"}
     
-    return {"ok": False,"message":"Unable to login"}
+    return render_template('login.html')
 
 
 def get_name_from_token(token):
