@@ -94,7 +94,7 @@
             });
             google.accounts.id.prompt();
         }
-        function onSignIn(response) {
+        function onSignIn(authInfos) {
             console.log("Is Login True");
             const jwt = authInfos.credential;
             var xhr = new XMLHttpRequest();
