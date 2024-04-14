@@ -16,6 +16,8 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if session.get('logged_in'):
+        return redirect(url_for('home_page'))
     if request.method == 'POST':
         # Google Login with token 
         token = request.form.get('token')
