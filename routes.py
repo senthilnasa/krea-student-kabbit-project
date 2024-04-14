@@ -40,8 +40,10 @@ def login():
                 session['logged_in'] = True
                 session['user_name'] = user.name
                 session['user_email'] = user.email
+            return {"ok": True,"message":"Successfully logged in"}
         else:
             return {"ok": False,"message":"Unable to login"}
+
     
     return render_template('login.html')
 
@@ -50,7 +52,7 @@ def get_name_from_token(token):
     # base 64 decode the token
     # extract the name from the token
     dtoken = base64.b64decode(token.split('.')[1] + '==').decode('utf-8')
-    name = dtoken.split('"name": "')[1].split('", "picture":')[0]
+    name = dtoken.split('"name":')[1].split(',')[0].replace('"','')
     return name
     
     
