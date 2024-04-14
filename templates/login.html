@@ -98,18 +98,18 @@
             console.log("Is Login True");
             const jwt = authInfos.credential;
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'auth.php', true);
+            xhr.open('POST', '/login', true);
             xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
             xhr.onload = function() {
                 var jsonResponse = JSON.parse(this.responseText);
                 if (jsonResponse["ok"]) {
                     window.location.reload();
+                }else{
+                    alert(jsonResponse["error"]);
                 }
             };
             xhr.send('token=' + jwt);
-           
         }
-
     </script>        
 </body>
 </html>

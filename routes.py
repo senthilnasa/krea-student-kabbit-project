@@ -1,3 +1,4 @@
+import base64
 from app import app, db, mail
 from flask import render_template, request, redirect, url_for, session, flash
 from models import TemporaryLogin, VerificationToken, User, CabRequest, JoinRequest
@@ -20,15 +21,41 @@ def login():
         token = request.form.get('token')
         # Verify ID token and get mail Id
         mail_id = verify_id_token(token)
-        print(mail_id)
-        return redirect(mail_id)
         
+        
+        if mail_id:
+            # Check if the user has already registered
+            user = User.query.filter_by(email=mail_id).first()
+            if user==None:
+                user = User()
+                name=get_name_from_token(token)
+                user.email = mail_id
+                user.name = name
+                db.session.add(user)
+                db.session.commit()
+                session['logged_in'] = True
+                session['user_name'] = name
+                session['user_email'] = mail_id
+            else:
+                session['logged_in'] = True
+                session['user_name'] = user.name
+                session['user_email'] = user.email
+        return {"ok": True}
+    
+    return {"ok": False,"message":"Unable to login"}
 
-    return render_template('login.html')
 
+def get_name_from_token(token):
+    # base 64 decode the token
+    # extract the name from the token
+    dtoken = base64.b64decode(token.split('.')[1] + '==').decode('utf-8')
+    name = dtoken.split('"name": "')[1].split('", "picture":')[0]
+    return name
+    
+    
 
 def verify_id_token(token):
-    # Verify the token and get the email ID
+    # Verify the token and get the email ID 
     url=f"https://www.googleapis.com/oauth2/v1/tokeninfo?id_token={token}"
     response = requests.get(url)
     data = response.json()
