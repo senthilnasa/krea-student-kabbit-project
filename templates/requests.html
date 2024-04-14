@@ -112,6 +112,7 @@
             <p><strong>Name:</strong> {{ request.name }}</p>
             <p><strong>Destination:</strong> {{ request.destination }}</p>
             <p><strong>Time:</strong> {{ request.time.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><strong>Mobile Number:</strong> {{ request.phone_number }}</p>
             <form action="{{ url_for('join_trip', cab_request_id=request.id) }}" method="post">
                 <button type="submit" class="request-join-btn">Request to Join</button>
             </form>

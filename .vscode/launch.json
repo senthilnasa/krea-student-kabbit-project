@@ -13,7 +13,7 @@
                 "FLASK_SECRET_KEY":"333",
                 "MAIL_USERNAME":"kabbitkrea@gmail.com",
                 "MAIL_PASSWORD":"rktkonpdyjuyccxj",
-                "DATABASE_URL":"mysql+pymysql://kabbit:kabbit@localhost:3306/kabbit_db",
+                "DATABASE_URL":"mysql+pymysql://kabbit:kabbit@10.10.3.120:3306/kabbit_db",
             },
             "args": [
                 "run",

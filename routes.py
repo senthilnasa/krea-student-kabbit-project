@@ -10,7 +10,7 @@ from uuid import uuid4
 
 @app.route('/')
 def index():
-    return redirect(url_for('login'))
+    return redirect(url_for('home_page'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -64,6 +64,11 @@ def verify_email(token):
             new_user.name = temp_login.name
             new_user.email = temp_login.email
             db.session.add(new_user)
+            
+            session['logged_in'] = True
+            session['user_name'] = temp_login.name
+            session['user_email'] = temp_login.email
+            db.session.commit()
 
             return redirect(url_for('home_page'))
 
@@ -79,7 +84,7 @@ def cab_request():
     if request.method == 'POST':
         name = session.get('user_name')
         email = session.get('user_email')
-        phone_number = session.get('user_phone')
+        phone_number = request.form.get('mobile')
         destination = request.form.get('destination')
         date = request.form.get('date')
         time = request.form.get('time')
@@ -134,7 +139,7 @@ def cab_request():
 def list_requests():
     user_email = session.get('user_email')
     # Assuming requests is a list of trip objects
-    requests = CabRequest.query.all()
+    requests = CabRequest.query.filter(CabRequest.creator_email!=user_email).all()
     # You would also fetch the join requests made by the user
     user_join_requests = JoinRequest.query.filter_by(requester_email=user_email).all()
     # Create a set of trip IDs that the user has already requested to join
@@ -175,7 +180,9 @@ def filter_requests():
 
 @app.route('/logout')
 def logout():
-    # Redirect the user to the home page
+
+    # Clear the session
+    session.clear()
     return redirect(url_for('home_page'))
 
 def get_creator_email(trip_id):
