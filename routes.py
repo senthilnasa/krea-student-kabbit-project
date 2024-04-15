@@ -270,8 +270,8 @@ def handle_join_request(join_request_id, action):
         flash('Request accepted. User added to the trip.', 'success')
         db.session.commit()
     elif action == 'decline':
-        db.session.delete(join_request)
-        flash('Request declined.', 'success')
+        join_request.accepted ='-1'
+        join_request.rej_remarks=request.form.get('rej_remarks')
         db.session.commit()
 
     return redirect(url_for('dashboard'))

@@ -140,7 +140,7 @@
             {% if created_trips %}
                 {% for trip in created_trips %}
                     <div class="trip-details card">
-                        <div class="trip-detail"><strong>Date:</strong> {{ trip.time.strftime('%Y-%m-%d') }}</div>
+                        <div class="trip-detail"><strong>Date:</strong> {{ trip.time.strftime('%d-%b-%Y') }}</div>
                         <div class="trip-detail"><strong>Name:</strong> {{ trip.name }}</div>
                         <div class="trip-detail"><strong>Creator Email:</strong> {{ trip.creator_email }}</div>
                         <div class="trip-detail"><strong>Time:</strong> {{ trip.time.strftime('%H:%M') }}</div>
@@ -192,7 +192,10 @@
                 {% for request in sent_requests %}
                     <li class="card">
                         Request to join trip to {{ request.cab_request.destination }} on {{ request.cab_request.time.strftime('%Y-%m-%d %H:%M') }}<br>
-                        Status: {% if request.accepted %} Accepted {% else %} Pending {% endif %}
+                        Status: {% if request.accepted %} Accepted {% if request.cab_request.accepted==0 %} (Pending) {% endif %} {% elif request.accepted==-1 %} Declined {{ request.remarks }} {% endif %}<br> 
+                        {% if request.accepted %}
+                        Participants: {% for join_request in request.cab_request.join_requests if join_request.accepted %} {{ join_request.requester_email }}; {% endfor %}
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
